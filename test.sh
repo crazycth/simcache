@@ -1,0 +1,1 @@
+curl http://localhost:9999/_richardcache/scores/Tom
