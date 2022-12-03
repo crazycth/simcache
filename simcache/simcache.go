@@ -1,8 +1,9 @@
 package simcache
 
 import (
-	"github/richard003/simcache/lru"
 	"sync"
+
+	"github.com/crazycth/simcache/lru"
 )
 
 type cache struct {

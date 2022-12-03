@@ -1,3 +1,3 @@
-module github/richard003/simcache
+module github.com/crazycth/simcache
 
 go 1.17

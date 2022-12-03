@@ -2,13 +2,14 @@ package simcache
 
 import (
 	"fmt"
-	"github/richard003/simcache/consistenthash"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"sync"
+
+	"github.com/crazycth/simcache/consistenthash"
 )
 
 const (
@@ -37,6 +38,7 @@ func (p *HTTPPool) Log(format string, v ...interface{}) {
 }
 
 func (p *HTTPPool) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Get ", r.URL.Path)
 	if !strings.HasPrefix(r.URL.Path, p.basePath) {
 		panic("HTTPPool serving unexpected path: " + r.URL.Path)
 	}

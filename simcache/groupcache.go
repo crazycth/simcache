@@ -18,7 +18,7 @@ func (f GetterFunc) Get(key string) ([]byte, error) {
 
 type Group struct {
 	name      string
-	getter    Getter
+	getter    Getter //e.g. seach database
 	mainCache cache
 	peers     PeerPicker
 }
@@ -101,4 +101,16 @@ func (g *Group) RegisterPeers(peers PeerPicker) {
 		panic("RegisterPeerPicker called more than once")
 	}
 	g.peers = peers
+}
+
+func (g *Group) QueryPeer(name string, key string) (ByteView, error) {
+	if g.peers == nil {
+		return ByteView{}, fmt.Errorf("server peers nil error")
+	}
+
+	if peer, ok := g.peers.PickPeer(key); ok {
+		return g.getFromPeer(peer, key)
+	}
+
+	return ByteView{}, fmt.Errorf("server pick peer error")
 }
