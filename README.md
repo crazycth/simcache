@@ -10,7 +10,7 @@
 
 待优化
 
-* sync.mu性能不如sync.map，可将锁机制替换为sync.map
+* sync.mu性能不如sync.map，可将锁机制替换为sync.map，但存在缓存击穿问题
 * simcache与httppool虽实现上解耦，但用接口实现关联的方式不太优雅
 
 

@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	pb "github.com/crazycth/simcache/proto/message"
 	"github.com/crazycth/simcache/singleflight"
 	"github.com/crazycth/simcache/tools/async"
 )
@@ -86,11 +87,17 @@ func (g *Group) load(key string) (value ByteView, err error) {
 }
 
 func (g *Group) getFromPeer(peer PeerGetter, key string) (ByteView, error) {
-	bytes, err := peer.Get(g.name, key)
+	req := &pb.Request{
+		Name: g.name,
+		Key:  key,
+	}
+	resp := &pb.Response{}
+	err := peer.Get(req, resp)
 	if err != nil {
+		log.Println("[Error][groupcache][getFromPeer] rpc error with ", err.Error())
 		return ByteView{}, err
 	}
-	return ByteView{b: bytes}, nil
+	return ByteView{b: resp.GetValue()}, nil
 }
 
 func (g *Group) getLocally(key string) (ByteView, error) {

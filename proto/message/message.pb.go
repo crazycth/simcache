@@ -4,7 +4,7 @@
 // 	protoc        v3.21.10
 // source: proto/message/message.proto
 
-package simcache
+package simcachepb
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"

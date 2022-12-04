@@ -59,7 +59,6 @@ func startAPIServer(apiAddr string, addrs []string, gee *simcache.Group) {
 			}
 			w.Header().Set("Content-Type", "application/octet-stream")
 			w.Write(view.ByteSlice())
-
 		}))
 
 	log.Println("fontend server is running at", apiAddr)
