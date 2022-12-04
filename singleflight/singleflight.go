@@ -8,49 +8,67 @@ import (
 	"github.com/crazycth/simcache/tools/async"
 )
 
-type call struct {
+type Call struct {
 	wg  sync.WaitGroup
 	val interface{}
 	err error
 }
 
+//结论: 不能用读写锁，否则对于同个key多个请求会同时读 --> 缓存击穿
 type Group struct {
-	M sync.Map
+	mu      sync.Mutex
+	FutureM map[string]*async.Future
+	CallM   map[string]*Call
 }
 
-//FIXME 思考下能不能用异步tool来解决问题
+//TODO 能限住，但太多锁效率很低
 func (g *Group) Do(key string, fn func() (interface{}, error)) (interface{}, error) {
-	if cI, ok := g.M.Load(key); ok {
-		c := cI.(*call)
-		c.wg.Wait() //如果该key已经有请求了，则等待
+	g.mu.Lock()
+	if g.CallM == nil {
+		g.CallM = make(map[string]*Call)
+	}
+	if c, ok := g.CallM[key]; ok {
+		log.Printf("[singleflight][Do] hit sync mutex")
+		g.mu.Unlock()
+		c.wg.Wait()
 		return c.val, c.err
 	}
-
-	c := new(call)
-	c.wg.Add(1) //发请求前加锁
-	g.M.Store(key, c)
+	c := new(Call)
+	c.wg.Add(1)
+	g.CallM[key] = c
+	g.mu.Unlock()
 
 	c.val, c.err = fn()
 	c.wg.Done()
 
-	g.M.Delete(key)
+	g.mu.Lock()
+	delete(g.CallM, key)
+	g.mu.Unlock()
 
 	return c.val, c.err
 }
 
-//异步tool策略
+//FIXME 思考有能提高效率的方法吗
 func (g *Group) Query(key string, fn func() (interface{}, error)) (interface{}, error) {
-	if futureI, ok := g.M.Load(key); ok {
-		log.Fatalln("[singleflight][Query] hit future cache")
-		future := futureI.(*async.Future)
+	g.mu.Lock()
+	if g.FutureM == nil {
+		g.FutureM = make(map[string]*async.Future)
+	}
+	if future, ok := g.FutureM[key]; ok {
+		g.mu.Unlock()
+		log.Printf("[singleflight][Query] hit future cache key:%s", key)
 		return future.Get()
 	}
 
-	log.Fatalln("[singleflight] start query")
+	log.Printf("[singleflight][Query] start query key:%s", key)
+
 	future := async.Go(fn, context.Background())
-	g.M.Store(key, future)
+	g.FutureM[key] = future
+	g.mu.Unlock()
 
 	result, err := future.Get()
-	g.M.Delete(key)
+	g.mu.Lock()
+	delete(g.FutureM, key)
+	g.mu.Unlock()
 	return result, err
 }
