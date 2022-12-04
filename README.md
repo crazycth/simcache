@@ -8,10 +8,6 @@
 * protobuf通信
 
 
-
-
-
-
 待优化
 
 * sync.mu性能不如sync.map，可将锁机制替换为sync.map
@@ -21,4 +17,5 @@
 
 参考
 
+* https://github.com/golang/groupcache
 * bytedance life-algorithm async实现
