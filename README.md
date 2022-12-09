@@ -26,4 +26,3 @@
 参考
 
 * https://github.com/golang/groupcache
-* bytedance life-algorithm async实现
